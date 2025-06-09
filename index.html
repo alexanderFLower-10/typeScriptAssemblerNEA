@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        
+        <!--title of tab in topbar-->
+        <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+        <title>ARM Assembler</title>
+        <link rel = "stylesheet" href = "style.css">
+        <meta charset = "UTF-8">
+        <meta name="description" content ="ARM Assembler based on AQA Instruction Set">
+        <meta name ="keywords" content ="Assembly, AQA Instruction Set, ARM Assembler">
+        <meta name="author"content = "Alexander Fowler">
+        <meta name = "viewport" content = "width=device-width, initial-scale=1.0">  
+        <script src = "./src/main.js" type = "module" defer></script>
+    </head>
+
+    <body>
+
+        <!--h1 is largest title-->
+        <h1>ARM Assembler On AQA Instructions set</h1>
+        <!--Horizontal rule-->
+        <hr> 
+        <!--paragraph with line before and after-->
+        <div class = "navigatorBar">
+          <a href = "index.html" target = "_self" class = "active">
+            Assembler</a>
+        <a href = "challenges.html" target = "_self" >
+            Challenges</a>
+            <a href = "instSet.html" target = "_self">
+            Instruction Set</a>
+            <a href = "roadMap.html" target = "_self">
+            RoadMap</a>
+                        <a href = "tutorial.html" target = "_self">
+            Tutorial</a>
+        </div>
+        <br>
+        <br>
+
+        <form class= "main">
+            <textarea placeholder="Code here"  id = "submitProgramArea" style ="resize: none;"name = "submitProgramArea" class ="Base"></textarea>
+            <div id = "registersContainer" class = "Base">
+                <label id = "registerTitle" class = "Title">REGISTERS</label>
+                    <pre id = "R0">R0:  0</pre> 
+                    <br>
+                    <pre id = "R1">R1:  0</pre> 
+                    <br>
+                    <pre id = "R2">R2:  0</pre> 
+                    <br>
+                    <pre id = "R3">R3:  0</pre> 
+                    <br>
+                    <pre id = "R4">R4:  0</pre> 
+                    <br>
+                    <pre id = "R5">R5:  0</pre> 
+                    <br>
+                    <pre id = "R6">R6:  0</pre> 
+                    <br>
+                    <pre id = "R7">R7:  0</pre> 
+                    <br>
+                    <pre id = "R8">R8:  0</pre> 
+                    <br>
+                    <pre id = "R9">R9:  0</pre> 
+                    <br>
+                    <pre id = "R10">R10: 0</pre> 
+                    <br>
+                    <pre id = "R11">R11: 0</pre> 
+                    <br>
+                    <pre id = "R12">R12: 0</pre> 
+                    <br>
+                    <pre id = "R13">R13: 0</pre> 
+                    <br>
+                    <pre id = "R14">R14: 0</pre> 
+                    <br>
+                    <pre id = "R15">R15: 0</pre> 
+                    <br>
+                    <pre id = "R16">R16: 0</pre> 
+                    <br>
+                    <pre id = "R17">R17: 0</pre> 
+                    <br>
+                    <pre id = "R18">R18: 0</pre> 
+                    <br>
+                    <pre id = "R19">R19: 0</pre> 
+                    <br>                 
+                    <pre id = "R20">R20: 0</pre> 
+                    <br>
+                    <pre id = "R21">R21: 0</pre> 
+                    <br>              
+                    <pre id = "R22">R22: 0</pre> 
+                    <br>
+                    <pre id = "R23">R23: 0</pre> 
+            </div>
+            <div id = "memoryContainer" class = "Base">    
+                <label id = "MemoryTitle" class = "Title">MEMORY</label>
+                    <pre id = "M0">0:  0</pre> 
+                    <br>
+                    <pre id = "M1">1:  0</pre> 
+                    <br>
+                    <pre id = "M2">2:  0</pre> 
+                    <br>
+                    <pre id = "M3">3:  0</pre> 
+                    <br>
+                    <pre id = "M4">4:  0</pre> 
+                    <br>
+                    <pre id = "M5">5:  0</pre> 
+                    <br>
+                    <pre id = "M6">6:  0</pre> 
+                    <br>
+                    <pre id = "M7">7:  0</pre> 
+                    <br>
+                    <pre id = "M8">8:  0</pre> 
+                    <br>
+                    <pre id = "M9">9:  0</pre> 
+                    <br>
+                    <pre id = "M10">10: 0</pre> 
+                    <br>
+                    <pre id = "M11">11: 0</pre> 
+                    <br>
+                    <pre id = "M12">12: 0</pre> 
+                    <br>
+                    <pre id = "M13">13: 0</pre> 
+                    <br>
+                    <pre id = "M14">14: 0</pre> 
+                    <br>
+                    <pre id = "M15">15: 0</pre> 
+                    <br>
+                    <pre id = "M16">16: 0</pre> 
+                    <br>
+                    <pre id = "M17">17: 0</pre> 
+                    <br>
+                    <pre id = "M18">18: 0</pre> 
+                    <br>
+                    <pre id = "M19">19: 0</pre> 
+                    <br>                 
+                    <pre id = "M20">20: 0</pre> 
+                    <br>
+                    <pre id = "M21">21: 0</pre> 
+                    <br>              
+                    <pre id = "M22">22: 0</pre> 
+                    <br>
+                    <pre id = "M23">23: 0</pre> 
+            </div>
+            <div id = "Manuals" class = "Manuals Base">
+                <label id = "ManualsLabel" class = "Excempt Title">MANUALS</label>  
+                <label class = "Excempt" >Registers:</label> <br>
+                <input  id="registerEditsRdx" placeholder="Rdx" size="3"></input>
+                <input  id="registerEditsVal" placeholder="Value" size="5"></input> 
+                <br>
+
+                <label>Memory:</label> 
+                <input  style ="resize: none; "id="memoryEditsMA" placeholder="MA" size="2" ></input>
+                <input  style ="resize: none; "id="memoryEditsVal" placeholder="Value" size="5"></input>
+                <br> 
+
+                <label>Set PC:</label> 
+                <input  style ="resize: none; "id="pcEditsVal" placeholder="Value" size="5"></input>
+                <br> 
+
+                <label>Set SR:</label>
+                <input  style ="resize: none; "id="breakPointerAddVal" placeholder="Flag" size="4"></input>
+                <br>
+                <button id = "setAll">Set All</button>
+                <label>Breakpoint:</label> 
+                <input  style ="resize: none; "id="breakPointsLn" placeholder="Ln" size="3" ></input>
+                <button id = "addBp">+</button><button id = "removeBp">-</button>
+            </div>
+            <div id = "executes" class ="executes Base" >
+                <label id = "executesLabel" class = "Excempt Title">Executes</label>
+                <button id = "assembleProgram" >Assemble</button>
+                <button id = "step" type = "submit" onclick = "step()">Step</button>
+                <button id = "execute" type = "submit" onclick = "executeProgram()">Execute</button>
+                <button id = "stepBack" type = "submit" onclick = "stepBack()">Step Back</button>
+
+            </div>
+            <br><br><br><br><br><br><br><br><br><br><br><br>
+            <div class ="Saves Base">
+                <label class = "Title">Saves</label>
+                                <input  style ="resize: none; "id="fileName" placeholder="fileName" size="12" ></input> <br>
+                <button id = "saveLocal" type = "submit">Save Local</button>
+                <br>
+                <button id = "saveServerSide" type = "submit" onclick = "step()">Server Save</button>
+                <br>
+                <button id = "Load" type = "submit" onclick = "executeProgram()">Load</button>
+                <br>
+                <button id = "stepBack" type = "submit" onclick = "stepBack()">Step Back</button>
+            </div>
+            <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+            <div class = "Exceptions Base">
+                <label class = "Title">Exceptions</label>
+            </div>
+        </form>
+
+        <br>
+    </body>
+</html>\
