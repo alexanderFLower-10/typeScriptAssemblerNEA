@@ -19,6 +19,7 @@ export class ARMEmulator{
             
             let currentInst : ThreeParameterInstruction = this.instList[this.PC] as ThreeParameterInstruction;
             currentInst.initialiseOperand2(this);
+            currentInst.initialiseRn(this);
         }
         else if(this.instList[this.PC] instanceof TwoParameterInstruction){
             let currentInst : TwoParameterInstruction = this.instList[this.PC] as TwoParameterInstruction;

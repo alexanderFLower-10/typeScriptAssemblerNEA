@@ -99,6 +99,10 @@ export class ThreeParameterInstruction extends Instruction{
         }
         
     }
+    initialiseRn(ARM : ARMEmulator){
+        this.Rn = ARM.getRegister(this.Rn);
+        
+    }
 }
 export class TwoParameterInstruction extends Instruction{
     private InstType : string;

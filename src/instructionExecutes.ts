@@ -21,17 +21,52 @@ export class AND extends ThreeParameterExecutes{
     Execute(ARM : ARMEmulator, Parameters : ThreeParameterInstruction) : void{
         let RnBin : string = Instruction.toBinary(Parameters.getRn());
         let Operand2Bin : string = Instruction.toBinary(Parameters.getOperand2());
-        let min : number = Math.min(RnBin.length, Operand2Bin.length);
         let max : number = Math.max(RnBin.length, Operand2Bin.length);
         let result : string = "";
-        for(let i = 0; i < min; i++){
-            if(RnBin.charAt(i) == '1' && Operand2Bin.charAt(i) == '1'){
-                result += '1';
-            }
-            else result += '0';
+        RnBin = RnBin.padStart(max, '0');
+        Operand2Bin = Operand2Bin.padStart(max, '0');
+        for(let i = 0; i < max; i++){
+            result += RnBin.charAt(i) == '1' && Operand2Bin.charAt(i) == '1' ? '1' : '0'; 
         }
-        for(let i = 0; i < (max-min); i++){
-            result += '0';
+        let value = Instruction.toDenary(result.replace(/^0+/, ''));
+        ARM.setRegister(Parameters.getRd(), value);
+    }
+}
+export class ORR extends ThreeParameterExecutes{
+    constructor(){super();};
+    Execute(ARM : ARMEmulator, Parameters : ThreeParameterInstruction) : void{
+        let RnBin : string = Instruction.toBinary(Parameters.getRn());
+        let Operand2Bin : string = Instruction.toBinary(Parameters.getOperand2());
+        let max : number = Math.max(RnBin.length, Operand2Bin.length);
+        let result : string = "";
+        RnBin = RnBin.padStart(max, '0');
+        Operand2Bin = Operand2Bin.padStart(max, '0');
+        for(let i = 0; i < max; i++){
+            result += RnBin.charAt(i) == '1' || Operand2Bin.charAt(i) == '1' ? '1' : '0'; 
         }
+        let value = Instruction.toDenary(result.replace(/^0+/, ''));
+        ARM.setRegister(Parameters.getRd(), value);
+    }
+}
+export class EOR extends ThreeParameterExecutes{
+    constructor(){super();};
+    Execute(ARM : ARMEmulator, Parameters : ThreeParameterInstruction) : void{
+        let RnBin : string = Instruction.toBinary(Parameters.getRn());
+        let Operand2Bin : string = Instruction.toBinary(Parameters.getOperand2());
+        let max : number = Math.max(RnBin.length, Operand2Bin.length);
+        let result : string = "";
+        RnBin = RnBin.padStart(max, '0');
+        Operand2Bin = Operand2Bin.padStart(max, '0');
+        for(let i = 0; i < max; i++){
+            result += (RnBin.charAt(i) == '1' && Operand2Bin.charAt(i) == '0' ) || (RnBin.charAt(i) == '0' && Operand2Bin.charAt(i) == '1' ) ? '1' : '0';
+        }
+        let value = Instruction.toDenary(result.replace(/^0+/, ''));
+        ARM.setRegister(Parameters.getRd(), value);
+    }
+}
+export class LSL extends ThreeParameterExecutes{
+    constructor(){super();};
+    Execute(ARM : ARMEmulator, Parameters : ThreeParameterInstruction) : void{
+        let result : number = Parameters.getRn
     }
 }
