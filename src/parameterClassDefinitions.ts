@@ -14,9 +14,8 @@ export class Instruction{
         }
         return total;
     }
-    clone(...args : any[]) : this{
-        const{constructor} = Object.getPrototypeOf(this);
-        return new constructor(...args);
+    clone() : this{
+         return Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     }
 }
 export class ThreeParameterInstruction extends Instruction{

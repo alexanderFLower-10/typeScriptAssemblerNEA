@@ -1,10 +1,11 @@
 import { ADD, AND, BEQ, BGT, BLT, BNE, BranchExecutes, BUC, CMP, EOR, LDR, LSL, LSR, MOV, MVN, ORR, STR, SUB, ThreeParameterExecutes, TwoParameterExecutes } from "./instructionExecutes.js";
+import { programInputArea } from "./main.js";
 import { BranchInst, HALT, Instruction, Label, ThreeParameterInstruction, TwoParameterInstruction, WhiteSpace } from "./parameterClassDefinitions.js";
 interface StringMap<T>{
     [key : string]: T;
 }
 export class ARMEmulator{
-    private registers :  number[]; private memory : number[]; private PC : number; private SR : string; private instList : Instruction[]; private cap : number; private stateHistory : Stack<ARMEmulatorState>; private labelMap : StringMap<number>; private ThreeParameterInstructionMap : StringMap<new () => ThreeParameterExecutes>; private TwoParameterInstructionMap : StringMap<new () => TwoParameterExecutes>; private BranchesInstructionMap : StringMap<new () => BranchExecutes>; private Assembled : boolean;
+    private registers :  number[]; private memory : number[]; private PC : number; private SR : string; private instList : Instruction[]; private cap : number; private stateHistory : Stack<ARMEmulatorState>; private labelMap : StringMap<number>; private ThreeParameterInstructionMap : StringMap<new () => ThreeParameterExecutes>; private TwoParameterInstructionMap : StringMap<new () => TwoParameterExecutes>; private BranchesInstructionMap : StringMap<new () => BranchExecutes>; private Assembled : boolean; 
 
 
     constructor(instList : Instruction[]) {
@@ -55,9 +56,14 @@ export class ARMEmulator{
     assembled() {return this.Assembled;}
     Step(){
         this.stateHistory.Push(this.getState());
-        
+        if(!(this.instList[this.PC] instanceof WhiteSpace)) {
+            let tempArr = programInputArea.value.split('\n');
+            tempArr[this.PC] = tempArr[this.PC] +  "   " + "<";
+            this.PC != 0 ? tempArr[this.PC-1] = tempArr[this.PC-1].substring(0, tempArr[this.PC-1].length -4) : null;
+            programInputArea.value = tempArr.join('\n');
+        }
         if(this.instList[this.PC] instanceof ThreeParameterInstruction){   
-            let currentInst : ThreeParameterInstruction = this.instList[this.PC] as ThreeParameterInstruction;
+            let currentInst : ThreeParameterInstruction = this.instList[this.PC].clone() as ThreeParameterInstruction;
             currentInst.initialiseOperand2(this);
             currentInst.initialiseRn(this);
             let currentExecute = new this.ThreeParameterInstructionMap[currentInst.getInstType()]();

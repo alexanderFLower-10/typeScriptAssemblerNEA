@@ -5,7 +5,7 @@ const assembleButton = document.getElementById("assembleProgram");
 assembleButton.addEventListener("click", assembleProgram);
 const stepButton = document.getElementById("step");
 stepButton.addEventListener("click", Step);
-const programInputArea = document.getElementById("submitProgramArea");
+export const programInputArea = document.getElementById("submitProgramArea");
 function resetMemory() {
     for (let i = 0; i < 24; i++) {
         let elementToChange = document.getElementById('M' + i);
@@ -27,6 +27,7 @@ function assembleProgram() {
     let array = value.split("\n");
     let instList = getInstFromArr(array);
     ARM = new ARMEmulator(instList);
+    programInputArea.readOnly = true;
 }
 function Step() {
     ARM.assembled() ? ARM.Step() : alert("Please assemble before stepping");

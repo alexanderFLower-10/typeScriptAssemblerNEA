@@ -13,6 +13,9 @@ export class Instruction {
         }
         return total;
     }
+    clone() {
+        return Object.assign(Object.create(Object.getPrototypeOf(this)), this);
+    }
 }
 export class ThreeParameterInstruction extends Instruction {
     InstType;

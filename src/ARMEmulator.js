@@ -1,5 +1,6 @@
 import { ADD, AND, BEQ, BGT, BLT, BNE, BUC, CMP, EOR, LDR, LSL, LSR, MOV, MVN, ORR, STR, SUB } from "./instructionExecutes.js";
-import { BranchInst, HALT, Label, ThreeParameterInstruction, TwoParameterInstruction } from "./parameterClassDefinitions.js";
+import { programInputArea } from "./main.js";
+import { BranchInst, HALT, Label, ThreeParameterInstruction, TwoParameterInstruction, WhiteSpace } from "./parameterClassDefinitions.js";
 export class ARMEmulator {
     registers;
     memory;
@@ -60,8 +61,14 @@ export class ARMEmulator {
     assembled() { return this.Assembled; }
     Step() {
         this.stateHistory.Push(this.getState());
+        if (!(this.instList[this.PC] instanceof WhiteSpace)) {
+            let tempArr = programInputArea.value.split('\n');
+            tempArr[this.PC] = tempArr[this.PC] + "   " + "<";
+            this.PC != 0 ? tempArr[this.PC - 1] = tempArr[this.PC - 1].substring(0, tempArr[this.PC - 1].length - 4) : null;
+            programInputArea.value = tempArr.join('\n');
+        }
         if (this.instList[this.PC] instanceof ThreeParameterInstruction) {
-            let currentInst = this.instList[this.PC];
+            let currentInst = this.instList[this.PC].clone();
             currentInst.initialiseOperand2(this);
             currentInst.initialiseRn(this);
             let currentExecute = new this.ThreeParameterInstructionMap[currentInst.getInstType()]();
