@@ -1,8 +1,31 @@
 export class Instruction {
+    static toBinary(n) {
+        if (n == 0)
+            return '';
+        return this.toBinary(Math.floor(n / 2)) + (n % 2);
+    }
+    static toDenary(s) {
+        let total = 0;
+        for (let i = 0; i < s.length; i++) {
+            if (s.charAt(i) == '1') {
+                total += Math.pow(2, s.length - (i + 1));
+            }
+        }
+        return total;
+    }
 }
 export class ThreeParameterInstruction extends Instruction {
+    InstType;
+    static numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+    Rd;
+    addressingType;
+    unfetchedOperand2;
+    Instructions;
+    Rn;
+    operand2;
     constructor(InstType, Rd, Rn, rawOperand2) {
         super();
+        this.operand2 = -1;
         let placeholder;
         this.Instructions = ['ADD', 'SUB', 'AND', 'ORR', 'EOR', 'LSL', 'LSR'];
         if (!this.Instructions.includes(InstType))
@@ -40,8 +63,8 @@ export class ThreeParameterInstruction extends Instruction {
     getAddressingType() {
         return this.addressingType;
     }
-    getUnfetchedOperand2() {
-        return this.unfetchedOperand2;
+    getOperand2() {
+        return this.operand2;
     }
     setAddressingType(rawOperand2) {
         let addressingType;
@@ -64,11 +87,32 @@ export class ThreeParameterInstruction extends Instruction {
         }
         return [addressingType, Number(unfetchedOperand2)];
     }
+    initialiseOperand2(ARM) {
+        if (this.addressingType == 'DM') {
+            this.operand2 = ARM.getMemory(this.unfetchedOperand2);
+        }
+        else if (this.addressingType == 'DR') {
+            this.operand2 = ARM.getRegister(this.unfetchedOperand2);
+        }
+        else if (this.addressingType == 'IM') {
+            this.operand2 = this.unfetchedOperand2;
+        }
+    }
+    initialiseRn(ARM) {
+        this.Rn = ARM.getRegister(this.Rn);
+    }
 }
-ThreeParameterInstruction.numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
 export class TwoParameterInstruction extends Instruction {
+    InstType;
+    static numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+    Rd;
+    addressingType;
+    unfetchedOperand2;
+    Instructions;
+    operand2;
     constructor(InstType, Rd, rawOperand2) {
         super();
+        this.operand2 = -1;
         let placeholder;
         this.Instructions = ['MOV', 'MVN', 'LDR', 'STR', 'CMP'];
         if (!this.Instructions.includes(InstType))
@@ -84,6 +128,8 @@ export class TwoParameterInstruction extends Instruction {
         this.Rd = Number(placeholder);
         let temp = this.setAddressingType(rawOperand2);
         this.addressingType = temp[0];
+        if (this.InstType == "STR" && this.addressingType != 'DM')
+            throw new Error("Type STR must use addressing type direct memory for operand2 value ");
         this.unfetchedOperand2 = temp[1];
     }
     getInstType() {
@@ -95,8 +141,8 @@ export class TwoParameterInstruction extends Instruction {
     getAddressingType() {
         return this.addressingType;
     }
-    getUnfetchedOperand2() {
-        return this.unfetchedOperand2;
+    getOperand2() {
+        return this.operand2;
     }
     setAddressingType(rawOperand2) {
         let addressingType;
@@ -119,9 +165,27 @@ export class TwoParameterInstruction extends Instruction {
         }
         return [addressingType, Number(unfetchedOperand2)];
     }
+    initialiseOperand2(ARM) {
+        // if it was STR then I need just the memory location to be parsed as operand 2 so I can store the data in that location
+        if (this.InstType != 'STR') {
+            if (this.addressingType == 'DM') {
+                this.operand2 = ARM.getMemory(this.unfetchedOperand2);
+            }
+            else if (this.addressingType == 'DR') {
+                this.operand2 = ARM.getRegister(this.unfetchedOperand2);
+            }
+            else if (this.addressingType == 'IM') {
+                this.operand2 = this.unfetchedOperand2;
+            }
+        }
+        else
+            this.operand2 = this.unfetchedOperand2;
+    }
 }
-TwoParameterInstruction.numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
 export class BranchInst extends Instruction {
+    condition;
+    conditions;
+    label;
     constructor(part1, part2) {
         super();
         this.conditions = ['EQ', 'NE', 'LT', 'GT'];
@@ -150,6 +214,7 @@ export class WhiteSpace extends Instruction {
     }
 }
 export class Label extends Instruction {
+    label;
     constructor(line) {
         super();
         if (line.charAt(line.length - 1) != ":")

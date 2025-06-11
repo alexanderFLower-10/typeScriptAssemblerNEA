@@ -12,7 +12,7 @@
         <meta name ="keywords" content ="Assembly, AQA Instruction Set, ARM Assembler">
         <meta name="author"content = "Alexander Fowler">
         <meta name = "viewport" content = "width=device-width, initial-scale=1.0">  
-        <script src = "./src/main.js" type = "module" defer></script>
+        <script src = "./src/main.js" type = "module"></script>
     </head>
 
     <body>
@@ -37,7 +37,7 @@
         <br>
         <br>
 
-        <form class= "main">
+        <div class= "main">
             <textarea placeholder="Code here"  id = "submitProgramArea" style ="resize: none;"name = "submitProgramArea" class ="Base"></textarea>
             <div id = "registersContainer" class = "Base">
                 <label id = "registerTitle" class = "Title">REGISTERS</label>
@@ -166,7 +166,7 @@
             <div id = "executes" class ="executes Base" >
                 <label id = "executesLabel" class = "Excempt Title">Executes</label>
                 <button id = "assembleProgram" >Assemble</button>
-                <button id = "step" type = "submit" onclick = "step()">Step</button>
+                <button id = "step">Step</button>
                 <button id = "execute" type = "submit" onclick = "executeProgram()">Execute</button>
                 <button id = "stepBack" type = "submit" onclick = "stepBack()">Step Back</button>
 
@@ -187,7 +187,7 @@
             <div class = "Exceptions Base">
                 <label class = "Title">Exceptions</label>
             </div>
-        </form>
+        </div>
 
         <br>
     </body>

@@ -30,7 +30,8 @@ export function getInstFromArr(arr: string[]) : Instruction[]{
                 result[i] = new BranchInst(splitInst[0], splitInst[1]); break;
             case 1:
                 if(current == "HALT") result[i] = new HALT();
-                else result[i] == new Label(current); break;
+                else if(current.trim().length == 0) result[i] = new WhiteSpace();
+                else result[i] = new Label(current); break;
             case 0:
                 result[i] = new WhiteSpace();
         }

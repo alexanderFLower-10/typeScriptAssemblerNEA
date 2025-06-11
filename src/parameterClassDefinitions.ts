@@ -1,10 +1,9 @@
-import { ARMEmulator } from "./ARMEmulator";
+import { ARMEmulator } from "./ARMEmulator.js";
 
 export class Instruction{
-    static toBinary(n: number) : string{
-        if(n == 0) return '0';
-        else if (n==1) return '1';
-        else return this.toBinary(n / 2) + ((n % 2).toString());
+    static toBinary(n : number) : string{
+        if(n == 0) return '';
+        return this.toBinary(Math.floor(n/2)) + (n%2);
     }
     static toDenary(s : string) : number{
         let total : number = 0;
@@ -14,6 +13,10 @@ export class Instruction{
             }
         }
         return total;
+    }
+    clone(...args : any[]) : this{
+        const{constructor} = Object.getPrototypeOf(this);
+        return new constructor(...args);
     }
 }
 export class ThreeParameterInstruction extends Instruction{
@@ -114,7 +117,6 @@ export class TwoParameterInstruction extends Instruction{
         this.operand2 = -1;
         let placeholder : string;
         this.Instructions = ['MOV', 'MVN', 'LDR', 'STR', 'CMP']
-
         if(!this.Instructions.includes(InstType)) throw new Error(`Instruction type ${InstType} does not exist`);
         this.InstType = InstType;
 
@@ -128,6 +130,7 @@ export class TwoParameterInstruction extends Instruction{
 
         let temp = this.setAddressingType(rawOperand2);
         this.addressingType = temp[0];
+        if(this.InstType == "STR" && this.addressingType != 'DM' )  throw new Error("Type STR must use addressing type direct memory for operand2 value ");
         this.unfetchedOperand2 = temp[1];
     }
     getInstType() : string{
@@ -167,15 +170,20 @@ export class TwoParameterInstruction extends Instruction{
     }
 
     initialiseOperand2(ARM : ARMEmulator){
-        if(this.addressingType == 'DM'){
-            this.operand2 = ARM.getMemory(this.unfetchedOperand2);
+        // if it was STR then I need just the memory location to be parsed as operand 2 so I can store the data in that location
+        if(this.InstType != 'STR'){
+            if(this.addressingType == 'DM'){
+                this.operand2 = ARM.getMemory(this.unfetchedOperand2);
+            }
+            else if(this.addressingType == 'DR'){
+                this.operand2 = ARM.getRegister(this.unfetchedOperand2);
+            }
+            else if(this.addressingType == 'IM'){
+                this.operand2 = this.unfetchedOperand2;
+            }
         }
-        else if(this.addressingType == 'DR'){
-            this.operand2 = ARM.getRegister(this.unfetchedOperand2);
-        }
-        else if(this.addressingType == 'IM'){
-            this.operand2 = this.unfetchedOperand2;
-        }
+        else this.operand2 = this.unfetchedOperand2;
+
     }
     
 }

@@ -1,112 +1,194 @@
-var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
-    if (kind === "m") throw new TypeError("Private method is not writable");
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
-    return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
-};
-var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, state, kind, f) {
-    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
-    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
-    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
-};
-var _ARMEmulator_registers, _ARMEmulator_memory, _ARMEmulator_PC, _ARMEmulator_instList, _ARMEmulator_cap, _ARMEmulator_stateHistory, _Stack_stack, _Stack_front, _Stack_length, _ARMEmulatorState_registers, _ARMEmulatorState_memory, _ARMEmulatorState_PC;
+import { ADD, AND, BEQ, BGT, BLT, BNE, BUC, CMP, EOR, LDR, LSL, LSR, MOV, MVN, ORR, STR, SUB } from "./instructionExecutes.js";
+import { BranchInst, HALT, Label, ThreeParameterInstruction, TwoParameterInstruction } from "./parameterClassDefinitions.js";
 export class ARMEmulator {
+    registers;
+    memory;
+    PC;
+    SR;
+    instList;
+    cap;
+    stateHistory;
+    labelMap;
+    ThreeParameterInstructionMap;
+    TwoParameterInstructionMap;
+    BranchesInstructionMap;
+    Assembled;
     constructor(instList) {
-        _ARMEmulator_registers.set(this, void 0);
-        _ARMEmulator_memory.set(this, void 0);
-        _ARMEmulator_PC.set(this, void 0);
-        _ARMEmulator_instList.set(this, void 0);
-        _ARMEmulator_cap.set(this, void 0);
-        _ARMEmulator_stateHistory.set(this, void 0);
-        __classPrivateFieldSet(this, _ARMEmulator_stateHistory, new Stack(), "f");
-        __classPrivateFieldSet(this, _ARMEmulator_instList, instList, "f");
-        __classPrivateFieldSet(this, _ARMEmulator_registers, [], "f");
-        __classPrivateFieldSet(this, _ARMEmulator_memory, [], "f");
-        __classPrivateFieldSet(this, _ARMEmulator_PC, 0, "f");
-        __classPrivateFieldSet(this, _ARMEmulator_cap, 23, "f");
+        this.stateHistory = new Stack();
+        this.instList = instList;
+        this.cap = 24;
+        this.registers = Array(this.cap).fill(0);
+        this.memory = Array(this.cap).fill(0);
+        this.PC = 0;
+        this.SR = '';
+        this.labelMap = this.initalPassMap();
+        this.ThreeParameterInstructionMap = {
+            'ADD': ADD,
+            'SUB': SUB,
+            'AND': AND,
+            'ORR': ORR,
+            'EOR': EOR,
+            'LSL': LSL,
+            'LSR': LSR,
+        };
+        this.TwoParameterInstructionMap = {
+            'MOV': MOV,
+            'MVN': MVN,
+            'LDR': LDR,
+            'STR': STR,
+            'CMP': CMP,
+        };
+        this.BranchesInstructionMap = {
+            'EQ': BEQ,
+            'GT': BGT,
+            'LT': BLT,
+            'NE': BNE,
+            'UC': BUC,
+        };
+        this.Assembled = instList.length == 0 ? false : true;
     }
+    initalPassMap() {
+        let result = {};
+        for (let i = 0; i < this.instList.length; i++) {
+            if (this.instList[i] instanceof Label) {
+                let temp = this.instList[i];
+                result[temp.getLabel()] = i;
+            }
+        }
+        return result;
+    }
+    assembled() { return this.Assembled; }
     Step() {
-        var _a;
-        __classPrivateFieldGet(this, _ARMEmulator_stateHistory, "f").Push(this.getState());
-        __classPrivateFieldSet(this, _ARMEmulator_PC, (_a = __classPrivateFieldGet(this, _ARMEmulator_PC, "f"), _a++, _a), "f");
+        this.stateHistory.Push(this.getState());
+        if (this.instList[this.PC] instanceof ThreeParameterInstruction) {
+            let currentInst = this.instList[this.PC];
+            currentInst.initialiseOperand2(this);
+            currentInst.initialiseRn(this);
+            let currentExecute = new this.ThreeParameterInstructionMap[currentInst.getInstType()]();
+            currentExecute.Execute(this, currentInst);
+            let Rd = currentInst.getRd();
+            let elementToChange = document.getElementById('R' + Rd);
+            elementToChange.textContent = "R" + Rd + (String(Rd).length == 1 ? ":  " : ": ") + this.registers[Rd];
+        }
+        else if (this.instList[this.PC] instanceof TwoParameterInstruction) {
+            let currentInst = this.instList[this.PC];
+            currentInst.initialiseOperand2(this);
+            let currentExecute = new this.TwoParameterInstructionMap[currentInst.getInstType()]();
+            currentExecute.Execute(this, currentInst);
+            let Rd = currentInst.getRd();
+            if (!(currentExecute instanceof STR)) {
+                let elementToChange = document.getElementById('R' + Rd);
+                elementToChange.textContent = "R" + Rd + (String(Rd).length == 1 ? ":  " : ": ") + this.registers[Rd];
+            }
+            else {
+                let memoryAddy = currentInst.getOperand2();
+                let elementToChange = document.getElementById('M' + memoryAddy);
+                elementToChange.textContent = memoryAddy + (String(memoryAddy).length == 1 ? ":  " : ": ") + this.registers[Rd];
+            }
+        }
+        else if (this.instList[this.PC] instanceof BranchInst) {
+            let currentInst = this.instList[this.PC];
+            let currentExecute = new this.BranchesInstructionMap[currentInst.getCondition()]();
+            currentExecute.Execute(this, currentInst);
+        }
+        else if (this.instList[this.PC] instanceof HALT) {
+            this.HALT();
+        }
+        this.PC++;
     }
     StepBack() {
-        this.loadState(__classPrivateFieldGet(this, _ARMEmulator_stateHistory, "f").Pop());
+        this.loadState(this.stateHistory.Pop());
     }
-    getPC() { return __classPrivateFieldGet(this, _ARMEmulator_PC, "f"); }
-    setRegister(index, value) {
-        if (index > __classPrivateFieldGet(this, _ARMEmulator_cap, "f"))
-            throw new Error("Register does not exist on line " + __classPrivateFieldGet(this, _ARMEmulator_PC, "f"));
-        __classPrivateFieldGet(this, _ARMEmulator_registers, "f")[index] = value;
+    HALT() {
     }
-    setMemory(index, value) {
-        if (index > __classPrivateFieldGet(this, _ARMEmulator_cap, "f"))
-            throw new Error("Memory Address does not exist on line " + __classPrivateFieldGet(this, _ARMEmulator_PC, "f"));
-        __classPrivateFieldGet(this, _ARMEmulator_memory, "f")[index] = value;
-    }
+    getPC() { return this.PC; }
+    getSR() { return this.SR; }
     getRegister(index) {
-        return __classPrivateFieldGet(this, _ARMEmulator_registers, "f")[index];
+        return this.registers[index];
     }
     getMemory(index) {
-        return __classPrivateFieldGet(this, _ARMEmulator_memory, "f")[index];
+        return this.memory[index];
     }
     getState() {
         return new ARMEmulatorState(this);
     }
+    getLabelLocation(label) {
+        if (label in this.labelMap)
+            return this.labelMap[label];
+        else
+            throw Error("Label " + label + " does not exist");
+    }
+    setRegister(index, value) {
+        if (index > this.cap)
+            throw new Error("Register does not exist on line " + this.PC);
+        this.registers[index] = value;
+    }
+    setMemory(index, value) {
+        if (index > this.cap)
+            throw new Error("Memory Address does not exist on line " + this.PC);
+        this.memory[index] = value;
+    }
+    setPC(value) {
+        this.PC = value;
+    }
+    setSR(value) {
+        this.SR = value;
+    }
     loadState(state) {
-        __classPrivateFieldSet(this, _ARMEmulator_memory, state.getAllMemory(), "f");
-        __classPrivateFieldSet(this, _ARMEmulator_registers, state.getAllRegisters(), "f");
-        __classPrivateFieldSet(this, _ARMEmulator_PC, state.getPC(), "f");
+        this.memory = state.getAllMemory();
+        this.registers = state.getAllRegisters();
+        this.PC = state.getPC();
+        this.SR = state.getSR();
     }
 }
-_ARMEmulator_registers = new WeakMap(), _ARMEmulator_memory = new WeakMap(), _ARMEmulator_PC = new WeakMap(), _ARMEmulator_instList = new WeakMap(), _ARMEmulator_cap = new WeakMap(), _ARMEmulator_stateHistory = new WeakMap();
 class Stack {
+    stack;
+    front;
+    length;
     constructor() {
-        _Stack_stack.set(this, void 0);
-        _Stack_front.set(this, void 0);
-        _Stack_length.set(this, void 0);
-        __classPrivateFieldSet(this, _Stack_stack, [], "f");
-        __classPrivateFieldSet(this, _Stack_front, -1, "f");
-        __classPrivateFieldSet(this, _Stack_length, 0, "f");
+        this.stack = [];
+        this.front = -1;
+        this.length = 0;
     }
     Push(value) {
-        var _a, _b;
-        __classPrivateFieldSet(this, _Stack_front, (_a = __classPrivateFieldGet(this, _Stack_front, "f"), _a++, _a), "f");
-        __classPrivateFieldGet(this, _Stack_stack, "f")[__classPrivateFieldGet(this, _Stack_front, "f")] = value;
-        __classPrivateFieldSet(this, _Stack_length, (_b = __classPrivateFieldGet(this, _Stack_length, "f"), _b++, _b), "f");
+        this.front++;
+        this.stack[this.front] = value;
+        this.length++;
     }
     Pop() {
-        var _a, _b;
-        if (__classPrivateFieldGet(this, _Stack_length, "f") == 0)
+        if (this.length == 0)
             throw new Error("Cannot step back anymore");
-        let temp = __classPrivateFieldGet(this, _Stack_stack, "f")[__classPrivateFieldGet(this, _Stack_front, "f")];
-        __classPrivateFieldSet(this, _Stack_front, (_a = __classPrivateFieldGet(this, _Stack_front, "f"), _a--, _a), "f");
-        __classPrivateFieldSet(this, _Stack_length, (_b = __classPrivateFieldGet(this, _Stack_length, "f"), _b--, _b), "f");
+        let temp = this.stack[this.front];
+        this.front--;
+        this.length--;
         return temp;
     }
 }
-_Stack_stack = new WeakMap(), _Stack_front = new WeakMap(), _Stack_length = new WeakMap();
 class ARMEmulatorState {
+    registers;
+    memory;
+    PC;
+    SR;
     constructor(ARM) {
-        _ARMEmulatorState_registers.set(this, void 0);
-        _ARMEmulatorState_memory.set(this, void 0);
-        _ARMEmulatorState_PC.set(this, void 0);
-        __classPrivateFieldSet(this, _ARMEmulatorState_registers, [], "f");
-        __classPrivateFieldSet(this, _ARMEmulatorState_memory, [], "f");
+        this.registers = [];
+        this.memory = [];
         for (let i = 0; i < 23; i++) {
-            __classPrivateFieldGet(this, _ARMEmulatorState_registers, "f")[i] = ARM.getRegister(i);
-            __classPrivateFieldGet(this, _ARMEmulatorState_memory, "f")[i] = ARM.getMemory(i);
+            this.registers[i] = ARM.getRegister(i);
+            this.memory[i] = ARM.getMemory(i);
         }
-        __classPrivateFieldSet(this, _ARMEmulatorState_PC, ARM.getPC(), "f");
+        this.PC = ARM.getPC();
+        this.SR = ARM.getSR();
     }
     getAllRegisters() {
-        return __classPrivateFieldGet(this, _ARMEmulatorState_registers, "f");
+        return this.registers;
     }
     getAllMemory() {
-        return __classPrivateFieldGet(this, _ARMEmulatorState_memory, "f");
+        return this.memory;
     }
     getPC() {
-        return __classPrivateFieldGet(this, _ARMEmulatorState_PC, "f");
+        return this.PC;
+    }
+    getSR() {
+        return this.SR;
     }
 }
-_ARMEmulatorState_registers = new WeakMap(), _ARMEmulatorState_memory = new WeakMap(), _ARMEmulatorState_PC = new WeakMap();

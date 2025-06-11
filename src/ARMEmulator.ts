@@ -1,41 +1,94 @@
+import { ADD, AND, BEQ, BGT, BLT, BNE, BranchExecutes, BUC, CMP, EOR, LDR, LSL, LSR, MOV, MVN, ORR, STR, SUB, ThreeParameterExecutes, TwoParameterExecutes } from "./instructionExecutes.js";
 import { BranchInst, HALT, Instruction, Label, ThreeParameterInstruction, TwoParameterInstruction, WhiteSpace } from "./parameterClassDefinitions.js";
-
+interface StringMap<T>{
+    [key : string]: T;
+}
 export class ARMEmulator{
-    private registers :  number[]; private memory : number[]; private PC : number; private instList : Instruction[]; private cap : number; private stateHistory : Stack<ARMEmulatorState>; 
+    private registers :  number[]; private memory : number[]; private PC : number; private SR : string; private instList : Instruction[]; private cap : number; private stateHistory : Stack<ARMEmulatorState>; private labelMap : StringMap<number>; private ThreeParameterInstructionMap : StringMap<new () => ThreeParameterExecutes>; private TwoParameterInstructionMap : StringMap<new () => TwoParameterExecutes>; private BranchesInstructionMap : StringMap<new () => BranchExecutes>; private Assembled : boolean;
+
+
     constructor(instList : Instruction[]) {
         this.stateHistory = new Stack();
         this.instList = instList;
-        this.registers = [];
-        this.memory = [];
+        this.cap = 24;
+        this.registers = Array(this.cap).fill(0);
+        this.memory = Array(this.cap).fill(0);
         this.PC = 0;
-        this.cap = 23;
+        this.SR = '';
+        this.labelMap = this.initalPassMap();
+        this.ThreeParameterInstructionMap = {
+            'ADD' : ADD,
+            'SUB' : SUB,
+            'AND' : AND,
+            'ORR' : ORR,
+            'EOR' : EOR,
+            'LSL' : LSL,
+            'LSR' : LSR,
+        }
+        this.TwoParameterInstructionMap = {
+            'MOV' : MOV,
+            'MVN' : MVN,
+            'LDR' : LDR,
+            'STR' : STR,
+            'CMP' : CMP,
+        }
+        this.BranchesInstructionMap = {
+            'EQ' : BEQ,
+            'GT' : BGT,
+            'LT' : BLT,
+            'NE' : BNE,
+            'UC' : BUC,
+
+        }      
+        this.Assembled = instList.length == 0 ? false : true;   
     }
-    
+    private initalPassMap() : StringMap<number>  {
+        let result : StringMap<number> = {};
+        for(let i = 0; i < this.instList.length; i++){
+            if(this.instList[i] instanceof Label){
+                let temp : Label = this.instList[i] as Label;
+                result[temp.getLabel()] = i;
+            }
+        }
+        return result;
+    }
+    assembled() {return this.Assembled;}
     Step(){
         this.stateHistory.Push(this.getState());
         
-        if(this.instList[this.PC] instanceof ThreeParameterInstruction){
-
-            
+        if(this.instList[this.PC] instanceof ThreeParameterInstruction){   
             let currentInst : ThreeParameterInstruction = this.instList[this.PC] as ThreeParameterInstruction;
             currentInst.initialiseOperand2(this);
             currentInst.initialiseRn(this);
+            let currentExecute = new this.ThreeParameterInstructionMap[currentInst.getInstType()]();
+            currentExecute.Execute(this, currentInst);
+            let Rd = currentInst.getRd();
+            let elementToChange = document.getElementById('R' + Rd) as HTMLPreElement;
+            elementToChange.textContent = "R" + Rd + (String(Rd).length == 1 ? ":  " : ": ") + this.registers[Rd];
         }
         else if(this.instList[this.PC] instanceof TwoParameterInstruction){
             let currentInst : TwoParameterInstruction = this.instList[this.PC] as TwoParameterInstruction;
             currentInst.initialiseOperand2(this);
+            let currentExecute = new this.TwoParameterInstructionMap[currentInst.getInstType()]();
+            currentExecute.Execute(this, currentInst);
+            let Rd = currentInst.getRd()
+            if(!(currentExecute instanceof STR)){
+                let elementToChange = document.getElementById('R' + Rd) as HTMLPreElement;
+                elementToChange.textContent = "R" + Rd + (String(Rd).length == 1 ? ":  " : ": ") + this.registers[Rd];
+            }
+            else{
+                let memoryAddy = currentInst.getOperand2();
+                let elementToChange = document.getElementById('M' + memoryAddy) as HTMLPreElement;
+                elementToChange.textContent = memoryAddy + (String(memoryAddy).length == 1 ? ":  " : ": ") + this.registers[Rd];      
+            }
         } 
         else if(this.instList[this.PC] instanceof BranchInst){
             let currentInst : BranchInst = this.instList[this.PC] as BranchInst;
-        }
-        else if(this.instList[this.PC] instanceof Label){
-            let currentInst : Label = this.instList[this.PC] as Label;
-        }
-        else if(this.instList[this.PC] instanceof WhiteSpace){
-
+            let currentExecute = new this.BranchesInstructionMap[currentInst.getCondition()]();
+            currentExecute.Execute(this, currentInst);
         }
         else if(this.instList[this.PC] instanceof HALT){
-
+            this.HALT();
         }
 
 
@@ -45,16 +98,11 @@ export class ARMEmulator{
     StepBack(){
         this.loadState(this.stateHistory.Pop());
     }
-
+    HALT(){
+        
+    }
     getPC(){ return this.PC;}
-    setRegister(index : number, value : number){
-        if(index > this.cap) throw new Error("Register does not exist on line " + this.PC);
-        this.registers[index] = value;
-    }
-    setMemory(index: number, value : number){
-        if(index > this.cap) throw new Error("Memory Address does not exist on line " + this.PC);
-        this.memory[index] = value;
-    }
+    getSR(){return this.SR;}
     getRegister(index : number) : number{
         return this.registers[index];
     }
@@ -64,10 +112,29 @@ export class ARMEmulator{
     getState(): ARMEmulatorState{
         return new ARMEmulatorState(this);
     }
+    getLabelLocation(label : string) : number{
+        if(label in this.labelMap) return this.labelMap[label];
+        else throw Error("Label " + label + " does not exist")
+    }
+    setRegister(index : number, value : number){
+        if(index > this.cap) throw new Error("Register does not exist on line " + this.PC);
+        this.registers[index] = value;
+    }
+    setMemory(index: number, value : number){
+        if(index > this.cap) throw new Error("Memory Address does not exist on line " + this.PC);
+        this.memory[index] = value;
+    }
+    setPC(value : number){
+        this.PC = value;
+    }
+    setSR(value : string){
+        this.SR = value;
+    }
     loadState(state : ARMEmulatorState){
         this.memory = state.getAllMemory();
         this.registers = state.getAllRegisters();
         this.PC = state.getPC();
+        this.SR = state.getSR()
     }
 
 }
@@ -95,7 +162,7 @@ class Stack<T>{
 
 }
 class ARMEmulatorState{
-    private registers : number[]; private memory :number[]; private PC : number;
+    private registers : number[]; private memory :number[]; private PC : number; private SR : string;
     constructor(ARM : ARMEmulator) {
         this.registers = [];
         this.memory = [];
@@ -104,6 +171,7 @@ class ARMEmulatorState{
             this.memory[i] = ARM.getMemory(i);
         }
         this.PC = ARM.getPC();
+        this.SR = ARM.getSR();
     }
     getAllRegisters(){
         return this.registers;
@@ -113,5 +181,8 @@ class ARMEmulatorState{
     }
     getPC(){
         return this.PC;
+    }
+    getSR(){
+        return this.SR;
     }
 }

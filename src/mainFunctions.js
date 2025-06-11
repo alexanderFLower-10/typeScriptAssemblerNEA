@@ -31,8 +31,10 @@ export function getInstFromArr(arr) {
             case 1:
                 if (current == "HALT")
                     result[i] = new HALT();
+                else if (current.trim().length == 0)
+                    result[i] = new WhiteSpace();
                 else
-                    result[i] == new Label(current);
+                    result[i] = new Label(current);
                 break;
             case 0:
                 result[i] = new WhiteSpace();
