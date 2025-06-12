@@ -1,6 +1,6 @@
 import { ADD, AND, BEQ, BGT, BLT, BNE, BUC, CMP, EOR, LDR, LSL, LSR, MOV, MVN, ORR, STR, SUB } from "./instructionExecutes.js";
 import { programInputArea } from "./main.js";
-import { BranchInst, HALT, Label, ThreeParameterInstruction, TwoParameterInstruction, WhiteSpace } from "./parameterClassDefinitions.js";
+import { BranchInst, HALT, Label, ThreeParameterInstruction, TwoParameterInstruction } from "./parameterClassDefinitions.js";
 export class ARMEmulator {
     registers;
     memory;
@@ -14,7 +14,9 @@ export class ARMEmulator {
     TwoParameterInstructionMap;
     BranchesInstructionMap;
     Assembled;
+    rawInst;
     constructor(instList) {
+        this.rawInst = programInputArea.value.split('\n');
         this.stateHistory = new Stack();
         this.instList = instList;
         this.cap = 24;
@@ -47,6 +49,7 @@ export class ARMEmulator {
             'UC': BUC,
         };
         this.Assembled = instList.length == 0 ? false : true;
+        this.tickPointer();
     }
     initalPassMap() {
         let result = {};
@@ -58,15 +61,16 @@ export class ARMEmulator {
         }
         return result;
     }
+    tickPointer() {
+        let temp = Array.from(this.rawInst);
+        temp[this.PC] = temp[this.PC] + "   <";
+        programInputArea.value = temp.join('\n');
+    }
     assembled() { return this.Assembled; }
     Step() {
         this.stateHistory.Push(this.getState());
-        if (!(this.instList[this.PC] instanceof WhiteSpace)) {
-            let tempArr = programInputArea.value.split('\n');
-            tempArr[this.PC] = tempArr[this.PC] + "   " + "<";
-            this.PC != 0 ? tempArr[this.PC - 1] = tempArr[this.PC - 1].substring(0, tempArr[this.PC - 1].length - 4) : null;
-            programInputArea.value = tempArr.join('\n');
-        }
+        if (this.PC != 0)
+            this.tickPointer();
         if (this.instList[this.PC] instanceof ThreeParameterInstruction) {
             let currentInst = this.instList[this.PC].clone();
             currentInst.initialiseOperand2(this);

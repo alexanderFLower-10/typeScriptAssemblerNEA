@@ -5,13 +5,13 @@ import{
     ARMEmulator
 } from './ARMEmulator.js'
 import { Instruction } from './parameterClassDefinitions.js';
+export const programInputArea = document.getElementById("submitProgramArea") as HTMLTextAreaElement;
 let ARM : ARMEmulator = new ARMEmulator([]);
 
 const assembleButton  = document.getElementById("assembleProgram") as HTMLButtonElement;
 assembleButton.addEventListener("click", assembleProgram);
 const stepButton = document.getElementById("step") as HTMLButtonElement;
 stepButton.addEventListener("click", Step);
-export const programInputArea = document.getElementById("submitProgramArea") as HTMLTextAreaElement;
 
 function resetMemory(){
     for(let i = 0; i < 24; i++){

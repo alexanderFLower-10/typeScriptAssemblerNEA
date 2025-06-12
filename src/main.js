@@ -1,11 +1,11 @@
 import { getInstFromArr } from './mainFunctions.js';
 import { ARMEmulator } from './ARMEmulator.js';
+export const programInputArea = document.getElementById("submitProgramArea");
 let ARM = new ARMEmulator([]);
 const assembleButton = document.getElementById("assembleProgram");
 assembleButton.addEventListener("click", assembleProgram);
 const stepButton = document.getElementById("step");
 stepButton.addEventListener("click", Step);
-export const programInputArea = document.getElementById("submitProgramArea");
 function resetMemory() {
     for (let i = 0; i < 24; i++) {
         let elementToChange = document.getElementById('M' + i);

@@ -5,14 +5,15 @@ interface StringMap<T>{
     [key : string]: T;
 }
 export class ARMEmulator{
-    private registers :  number[]; private memory : number[]; private PC : number; private SR : string; private instList : Instruction[]; private cap : number; private stateHistory : Stack<ARMEmulatorState>; private labelMap : StringMap<number>; private ThreeParameterInstructionMap : StringMap<new () => ThreeParameterExecutes>; private TwoParameterInstructionMap : StringMap<new () => TwoParameterExecutes>; private BranchesInstructionMap : StringMap<new () => BranchExecutes>; private Assembled : boolean; 
-
+    private registers :  number[]; private memory : number[]; private PC : number; private SR : string; private instList : Instruction[]; private cap : number; private stateHistory : Stack<ARMEmulatorState>; private labelMap : StringMap<number>; private ThreeParameterInstructionMap : StringMap<new () => ThreeParameterExecutes>; private TwoParameterInstructionMap : StringMap<new () => TwoParameterExecutes>; private BranchesInstructionMap : StringMap<new () => BranchExecutes>; private Assembled : boolean;
+    private readonly rawInst : string[];
 
     constructor(instList : Instruction[]) {
+        this.rawInst = programInputArea.value.split('\n');      
         this.stateHistory = new Stack();
         this.instList = instList;
         this.cap = 24;
-        this.registers = Array(this.cap).fill(0);
+        this.registers = Array(this.cap).fill(0);   
         this.memory = Array(this.cap).fill(0);
         this.PC = 0;
         this.SR = '';
@@ -20,7 +21,7 @@ export class ARMEmulator{
         this.ThreeParameterInstructionMap = {
             'ADD' : ADD,
             'SUB' : SUB,
-            'AND' : AND,
+            'AND' : AND,                                
             'ORR' : ORR,
             'EOR' : EOR,
             'LSL' : LSL,
@@ -42,6 +43,7 @@ export class ARMEmulator{
 
         }      
         this.Assembled = instList.length == 0 ? false : true;   
+        this.tickPointer();
     }
     private initalPassMap() : StringMap<number>  {
         let result : StringMap<number> = {};
@@ -52,16 +54,16 @@ export class ARMEmulator{
             }
         }
         return result;
+    } 
+    private tickPointer(){
+        let temp :  string[]  = Array.from(this.rawInst);
+        temp[this.PC] = temp[this.PC] + "   <";
+        programInputArea.value = temp.join('\n');
     }
     assembled() {return this.Assembled;}
     Step(){
         this.stateHistory.Push(this.getState());
-        if(!(this.instList[this.PC] instanceof WhiteSpace)) {
-            let tempArr = programInputArea.value.split('\n');
-            tempArr[this.PC] = tempArr[this.PC] +  "   " + "<";
-            this.PC != 0 ? tempArr[this.PC-1] = tempArr[this.PC-1].substring(0, tempArr[this.PC-1].length -4) : null;
-            programInputArea.value = tempArr.join('\n');
-        }
+        if(this.PC != 0) this.tickPointer();
         if(this.instList[this.PC] instanceof ThreeParameterInstruction){   
             let currentInst : ThreeParameterInstruction = this.instList[this.PC].clone() as ThreeParameterInstruction;
             currentInst.initialiseOperand2(this);
@@ -71,7 +73,7 @@ export class ARMEmulator{
             let Rd = currentInst.getRd();
             let elementToChange = document.getElementById('R' + Rd) as HTMLPreElement;
             elementToChange.textContent = "R" + Rd + (String(Rd).length == 1 ? ":  " : ": ") + this.registers[Rd];
-        }
+        }   
         else if(this.instList[this.PC] instanceof TwoParameterInstruction){
             let currentInst : TwoParameterInstruction = this.instList[this.PC] as TwoParameterInstruction;
             currentInst.initialiseOperand2(this);
@@ -100,6 +102,7 @@ export class ARMEmulator{
 
         
         this.PC++;
+        
     }
     StepBack(){
         this.loadState(this.stateHistory.Pop());
